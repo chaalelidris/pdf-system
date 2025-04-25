@@ -12,7 +12,7 @@ interface PdfViewPageProps {
 
 export default async function PdfViewPage({ params }: PdfViewPageProps) {
   const user = await requireAuth();
-  const { id } = params;
+  const { id } = await params;
 
   // Fetch PDF details
   const pdf = await db.pdf.findUnique({

@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 
-// Set up the worker for PDF.js - use local worker file
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+// Use the CDN version of the worker file:
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface PdfViewerProps {
   fileUrl: string;
