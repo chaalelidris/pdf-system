@@ -1,14 +1,14 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
-import { FileUp } from "lucide-react";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -23,102 +23,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Category, PdfType, PdfOrigin } from "@/lib/types";
+import { Category, PdfType, PdfOrigin, type PdfDocument } from "@/lib/types";
 
-interface UploadPdfFormProps {
-  onSuccess?: () => void;
+interface PdfEditorProps {
+  pdf: PdfDocument;
 }
 
-export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<Category | "">("");
-  const [type, setType] = useState<PdfType>(PdfType.General);
-  const [origin, setOrigin] = useState<PdfOrigin>(PdfOrigin.Internal);
-  const [file, setFile] = useState<File | null>(null);
+export function PdfEditor({ pdf }: PdfEditorProps) {
+  const [title, setTitle] = useState(pdf.title);
+  const [category, setCategory] = useState<Category>(pdf.category as Category);
+  const [type, setType] = useState<PdfType>(pdf.type as PdfType);
+  const [origin, setOrigin] = useState<PdfOrigin>(pdf.origin as PdfOrigin);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-
-      // Validate file type
-      if (selectedFile.type !== "application/pdf") {
-        toast({
-          title: "Invalid file type",
-          description: "Only PDF files are allowed",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Validate file size (10MB max)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Maximum file size is 10MB",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setFile(selectedFile);
-    }
-  };
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!file || !title || !category) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", title);
-      formData.append("category", category);
-      formData.append("type", type);
-      formData.append("origin", origin);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const response = await fetch(`/api/pdfs/${pdf.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          category,
+          type,
+          origin,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to upload PDF");
+        throw new Error(error.message || "Failed to update PDF");
       }
 
       toast({
         title: "Success",
-        description: "PDF uploaded successfully",
+        description: "PDF updated successfully",
       });
 
-      // Reset form
-      setTitle("");
-      setCategory("");
-      setType(PdfType.General);
-      setOrigin(PdfOrigin.Internal);
-      setFile(null);
-
-      // Trigger refresh of PDF list
-      if (onSuccess) {
-        onSuccess();
-      }
+      router.refresh();
     } catch (error) {
       toast({
         title: "Error",
         description:
-          error instanceof Error ? error.message : "Failed to upload PDF",
+          error instanceof Error ? error.message : "Failed to update PDF",
         variant: "destructive",
       });
     } finally {
@@ -127,15 +80,12 @@ export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileUp className="h-5 w-5" />
-          Upload PDF
+          <Edit className="h-5 w-5" />
+          Edit PDF Metadata
         </CardTitle>
-        <CardDescription>
-          Upload a new PDF document to the system
-        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -204,23 +154,17 @@ export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="file">PDF File</Label>
-            <Input
-              id="file"
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Maximum file size: 10MB. Only PDF files are allowed.
-            </p>
-          </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Uploading..." : "Upload PDF"}
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? (
+              "Saving..."
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </CardFooter>
       </form>

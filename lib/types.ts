@@ -5,6 +5,18 @@ export enum Category {
   GeneralAdministration = "إدارة عامة",
 }
 
+export enum PdfType {
+  General = "general",
+  Confidential = "confidential",
+  Restricted = "restricted",
+}
+
+export enum PdfOrigin {
+  Internal = "internal",
+  External = "external",
+  Classified = "classified",
+}
+
 // Extend the built-in session types
 declare module "next-auth" {
   interface Session {
@@ -33,5 +45,21 @@ export interface PdfDocument {
   title: string;
   filename: string;
   category: Category;
+  type: PdfType;
+  origin: PdfOrigin;
   createdAt: string;
+}
+
+export interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  createdAt?: string;
+}
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  total: number;
 }

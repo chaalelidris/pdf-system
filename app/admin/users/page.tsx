@@ -1,8 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
-import { PdfList } from "@/components/pdf/pdf-list";
+import { UserManagement } from "@/components/admin/user-management";
 import { AppLayout } from "@/components/layout/app-layout";
 
-export default async function AdminPage() {
+export default async function UsersPage() {
   const user = await requireAdmin();
 
   const userData = {
@@ -16,8 +16,8 @@ export default async function AdminPage() {
   return (
     <AppLayout user={userData}>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <PdfList isAdmin={true} />
+        <h1 className="text-2xl font-bold">User Management</h1>
+        <UserManagement />
       </div>
     </AppLayout>
   );

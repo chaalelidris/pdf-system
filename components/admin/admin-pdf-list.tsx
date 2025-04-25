@@ -1,98 +1,120 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Download, FileText, Search, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react";
+import { Download, FileText, Search, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useToast } from "@/components/ui/use-toast"
-import { Category, type PdfDocument } from "@/lib/types"
-import { formatDate } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import { Category, type PdfDocument } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 interface AdminPdfListProps {
-  refreshTrigger?: number
+  refreshTrigger?: number;
 }
 
 export function AdminPdfList({ refreshTrigger = 0 }: AdminPdfListProps) {
-  const [pdfs, setPdfs] = useState<PdfDocument[]>([])
-  const [filteredPdfs, setFilteredPdfs] = useState<PdfDocument[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<string>("")
-  const { toast } = useToast()
+  const [pdfs, setPdfs] = useState<PdfDocument[]>([]);
+  const [filteredPdfs, setFilteredPdfs] = useState<PdfDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const { toast } = useToast();
 
   const fetchPdfs = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/pdfs")
+      const response = await fetch("/api/pdfs");
       if (!response.ok) {
-        throw new Error("Failed to fetch PDFs")
+        throw new Error("Failed to fetch PDFs");
       }
-      const data = await response.json()
-      setPdfs(data.pdfs)
-      setFilteredPdfs(data.pdfs)
+      console.log("Response:", response);
+      const data = await response.json();
+      setPdfs(data.pdfs);
+      setFilteredPdfs(data.pdfs);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to load PDF documents",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPdfs()
-  }, [refreshTrigger])
+    fetchPdfs();
+  }, [refreshTrigger]);
 
   useEffect(() => {
     // Filter PDFs based on search query and category
-    let filtered = pdfs
+    let filtered = pdfs;
 
     if (searchQuery) {
-      filtered = filtered.filter((pdf) => pdf.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      filtered = filtered.filter((pdf) =>
+        pdf.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     if (categoryFilter) {
-      filtered = filtered.filter((pdf) => pdf.category === categoryFilter)
+      filtered = filtered.filter((pdf) => pdf.category === categoryFilter);
     }
 
-    setFilteredPdfs(filtered)
-  }, [searchQuery, categoryFilter, pdfs])
+    setFilteredPdfs(filtered);
+  }, [searchQuery, categoryFilter, pdfs]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this PDF?")) {
-      return
+      return;
     }
 
     try {
       const response = await fetch(`/api/pdfs/${id}`, {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete PDF")
+        throw new Error("Failed to delete PDF");
       }
 
       toast({
         title: "Success",
         description: "PDF deleted successfully",
-      })
+      });
 
       // Refresh the list
-      fetchPdfs()
+      fetchPdfs();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete PDF",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   return (
     <Card className="w-full">
@@ -120,8 +142,12 @@ export function AdminPdfList({ refreshTrigger = 0 }: AdminPdfListProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value={Category.FinancialSeries}>{Category.FinancialSeries}</SelectItem>
-              <SelectItem value={Category.GeneralAdministration}>{Category.GeneralAdministration}</SelectItem>
+              <SelectItem value={Category.FinancialSeries}>
+                {Category.FinancialSeries}
+              </SelectItem>
+              <SelectItem value={Category.GeneralAdministration}>
+                {Category.GeneralAdministration}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -129,7 +155,9 @@ export function AdminPdfList({ refreshTrigger = 0 }: AdminPdfListProps) {
         {isLoading ? (
           <div className="text-center py-8">Loading documents...</div>
         ) : filteredPdfs.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No PDF documents found</div>
+          <div className="text-center py-8 text-muted-foreground">
+            No PDF documents found
+          </div>
         ) : (
           <div className="rounded-md border">
             <Table>
@@ -152,12 +180,18 @@ export function AdminPdfList({ refreshTrigger = 0 }: AdminPdfListProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(`/api/pdfs/${pdf.filename}`, "_blank")}
+                          onClick={() =>
+                            window.open(`/api/pdfs/${pdf.filename}`, "_blank")
+                          }
                         >
                           <Download className="h-4 w-4" />
                           <span className="sr-only">Download</span>
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(pdf.id)}>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(pdf.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
@@ -171,5 +205,5 @@ export function AdminPdfList({ refreshTrigger = 0 }: AdminPdfListProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -8,15 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  password      String
-  role          String    // "admin" or "user"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      String // "admin" or "user"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+  sessions  Session[]
 }
 
 model Pdf {
@@ -24,6 +24,8 @@ model Pdf {
   title     String
   filename  String   @unique
   category  String
+  type      String   @default("general") // New field for PDF type
+  origin    String   @default("internal") // New field for PDF origin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
