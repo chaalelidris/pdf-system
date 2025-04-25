@@ -30,7 +30,7 @@ export default async function PdfViewPage({ params }: PdfViewPageProps) {
     name: user.name ?? "Unknown User",
     email: user.email ?? "None",
     role: user.role,
-    image: user.image ?? null,
+    image: null,
   };
 
   return (

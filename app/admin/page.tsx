@@ -14,7 +14,7 @@ export default async function AdminPage() {
     name: user.name ?? "Unknown User",
     email: user.email ?? "None",
     role: user.role,
-    image: user.image ?? null,
+    image: null,
   };
 
   return (

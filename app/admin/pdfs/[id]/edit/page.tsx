@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { PdfEditor } from "@/components/pdf/pdf-editor";
 import { PdfViewer } from "@/components/pdf/pdf-viewer";
 import { AppLayout } from "@/components/layout/app-layout";
+import { Category, PdfOrigin, PdfType } from "@/lib/types";
 
 interface PdfEditPageProps {
   params: {
@@ -31,7 +32,7 @@ export default async function PdfEditPage({ params }: PdfEditPageProps) {
     name: user.name ?? "Unknown User",
     email: user.email ?? "None",
     role: user.role,
-    image: user.image ?? null,
+    image: null,
   };
 
   return (
@@ -44,9 +45,9 @@ export default async function PdfEditPage({ params }: PdfEditPageProps) {
               id: pdf.id,
               title: pdf.title,
               filename: pdf.filename,
-              category: pdf.category,
-              type: pdf.type || "general",
-              origin: pdf.origin || "internal",
+              category: pdf.category as Category,
+              type: pdf.type as PdfType,
+              origin: pdf.origin as PdfOrigin,
               createdAt: pdf.createdAt.toISOString(),
             }}
           />

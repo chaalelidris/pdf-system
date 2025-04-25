@@ -16,7 +16,7 @@ export default async function Home() {
     name: user.name ?? "Unknown User",
     email: user.email ?? "None",
     role: user.role,
-    image: user.image ?? null,
+    image: null,
   };
 
   return (
