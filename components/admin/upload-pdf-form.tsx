@@ -32,8 +32,8 @@ interface UploadPdfFormProps {
 export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category | "">("");
-  const [type, setType] = useState<PdfType>(PdfType.General);
-  const [origin, setOrigin] = useState<PdfOrigin>(PdfOrigin.Internal);
+  const [type, setType] = useState<PdfType>(PdfType.ORDER);
+  const [origin, setOrigin] = useState<PdfOrigin>(PdfOrigin.CENTRAL);
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -106,8 +106,8 @@ export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
       // Reset form
       setTitle("");
       setCategory("");
-      setType(PdfType.General);
-      setOrigin(PdfOrigin.Internal);
+      setType(PdfType.ORDER);
+      setOrigin(PdfOrigin.CENTRAL);
       setFile(null);
 
       // Trigger refresh of PDF list
@@ -179,11 +179,11 @@ export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={PdfType.General}>General</SelectItem>
-                <SelectItem value={PdfType.Confidential}>
-                  Confidential
-                </SelectItem>
-                <SelectItem value={PdfType.Restricted}>Restricted</SelectItem>
+                {Object.values(PdfType).map((pdfType) => (
+                  <SelectItem key={pdfType} value={pdfType}>
+                    {pdfType}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -198,9 +198,11 @@ export function UploadPdfForm({ onSuccess }: UploadPdfFormProps) {
                 <SelectValue placeholder="Select origin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={PdfOrigin.Internal}>Internal</SelectItem>
-                <SelectItem value={PdfOrigin.External}>External</SelectItem>
-                <SelectItem value={PdfOrigin.Classified}>Classified</SelectItem>
+                {Object.values(PdfOrigin).map((pdfOrigin) => (
+                  <SelectItem key={pdfOrigin} value={pdfOrigin}>
+                    {pdfOrigin}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

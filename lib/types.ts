@@ -6,15 +6,30 @@ export enum Category {
 }
 
 export enum PdfType {
-  General = "general",
-  Confidential = "confidential",
-  Restricted = "restricted",
+  ORDER = "امر",
+  OFFICIAL_DECREE = "مرسوم رئاسي",
+  OFFICIAL_GAZETTE = "جريدة رسمية",
+  MEMORANDUM = "مذكرة",
+  DECISION = "قرار",
+  PUBLICATION = "منشور",
+  REGULATION = "مقرر",
+  DIRECTIVE = "توجيهة",
+  INSTRUCTION = "تعليمة",
+  BYLAW = "لائحة",
+  DISPATCH = "إرسالية",
+  OTHERS = "أخرى",
 }
 
-export enum PdfOrigin {
+/* export enum PdfOrigin {
   Internal = "internal",
   External = "external",
   Classified = "classified",
+} */
+
+export enum PdfOrigin {
+  CENTRAL = "مركزي",
+  REGIONAL = "جهوي",
+  BRIGADE_COMMANDER = "قائد اللواء",
 }
 
 // Extend the built-in session types

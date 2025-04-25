@@ -4,15 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import {
-  FileText,
-  Users,
-  LogOut,
-  Menu,
-  Home,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
+import { FileText, Users, LogOut, Menu, Home, BarChart2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,7 +24,6 @@ export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [pdfSubmenuOpen, setPdfSubmenuOpen] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -56,34 +47,15 @@ export function Sidebar({ user }: SidebarProps) {
   const routes = [
     {
       label: "Dashboard",
-      icon: Home,
+      icon: isAdmin ? BarChart2 : Home,
       href: isAdmin ? "/admin" : "/",
       active: pathname === (isAdmin ? "/admin" : "/"),
     },
     {
       label: "PDF Documents",
       icon: FileText,
-      href: "#",
+      href: isAdmin ? "/admin/pdfs" : "/pdfs",
       active: pathname.includes("/pdfs"),
-      submenu: true,
-      submenuOpen: pdfSubmenuOpen,
-      toggleSubmenu: () => setPdfSubmenuOpen(!pdfSubmenuOpen),
-      submenuItems: [
-        {
-          label: "All Documents",
-          href: isAdmin ? "/admin/pdfs" : "/pdfs",
-          active: pathname === (isAdmin ? "/admin/pdfs" : "/pdfs"),
-        },
-        ...(isAdmin
-          ? [
-              {
-                label: "Upload Document",
-                href: "/admin/pdfs/upload",
-                active: pathname === "/admin/pdfs/upload",
-              },
-            ]
-          : []),
-      ],
     },
     ...(isAdmin
       ? [
@@ -111,59 +83,20 @@ export function Sidebar({ user }: SidebarProps) {
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="space-y-1 px-2">
             {routes.map((route) => (
-              <div key={route.label}>
-                {route.submenu ? (
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start",
-                        route.active && "bg-accent text-accent-foreground"
-                      )}
-                      onClick={route.toggleSubmenu}
-                    >
-                      <route.icon className="mr-2 h-4 w-4" />
-                      {route.label}
-                      {route.submenuOpen ? (
-                        <ChevronDown className="ml-auto h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      )}
-                    </Button>
-                    {route.submenuOpen && (
-                      <div className="ml-4 space-y-1">
-                        {route.submenuItems?.map((item) => (
-                          <Button
-                            key={item.label}
-                            variant="ghost"
-                            asChild
-                            className={cn(
-                              "w-full justify-start pl-6",
-                              item.active && "bg-accent text-accent-foreground"
-                            )}
-                          >
-                            <Link href={item.href}>{item.label}</Link>
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className={cn(
-                      "w-full justify-start",
-                      route.active && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <Link href={route.href}>
-                      <route.icon className="mr-2 h-4 w-4" />
-                      {route.label}
-                    </Link>
-                  </Button>
+              <Button
+                key={route.label}
+                variant="ghost"
+                asChild
+                className={cn(
+                  "w-full justify-start",
+                  route.active && "bg-accent text-accent-foreground"
                 )}
-              </div>
+              >
+                <Link href={route.href}>
+                  <route.icon className="mr-2 h-4 w-4" />
+                  {route.label}
+                </Link>
+              </Button>
             ))}
           </div>
         </ScrollArea>

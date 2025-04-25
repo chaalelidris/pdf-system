@@ -4,70 +4,84 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
-  // Check if user is authenticated
+  // 1. Auth check
   const session = await getServerSession(authOptions);
-
   if (!session?.user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Get query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const page = Number.parseInt(searchParams.get("page") || "1");
-    const limit = Number.parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const category = searchParams.get("category") || "";
-    const type = searchParams.get("type") || "";
-    const origin = searchParams.get("origin") || "";
+    // 2. Query params
+    const qp = request.nextUrl.searchParams;
+    const page = parseInt(qp.get("page") || "1", 10);
+    const limit = parseInt(qp.get("limit") || "10", 10);
+    const search = qp.get("search")?.trim() || "";
+    const category = qp.get("category") || "";
+    const type = qp.get("type") || "";
+    const origin = qp.get("origin") || "";
 
-    // Calculate skip for pagination
     const skip = (page - 1) * limit;
 
-    // Build where clause for filtering
-    const where: any = {};
+    // 3. Build WHERE fragments + params
+    const filters: string[] = [];
+    const params: any[] = [];
 
     if (search) {
-      where.title = {
-        contains: search,
-        mode: "insensitive",
-      };
+      filters.push(`LOWER("title") LIKE LOWER($${params.length + 1})`);
+      params.push(`%${search}%`);
     }
-
     if (category) {
-      where.category = category;
+      filters.push(`"category" = $${params.length + 1}`);
+      params.push(category);
     }
-
     if (type) {
-      where.type = type;
+      filters.push(`"type" = $${params.length + 1}`);
+      params.push(type);
     }
-
     if (origin) {
-      where.origin = origin;
+      filters.push(`"origin" = $${params.length + 1}`);
+      params.push(origin);
     }
 
-    // Get total count for pagination
-    const total = await db.pdf.count({ where });
+    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-    // Get paginated PDFs
-    const pdfs = await db.pdf.findMany({
-      where,
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    });
+    // 4. Total count
+    const countResult: { count: bigint }[] = await db.$queryRawUnsafe(
+      `SELECT COUNT(*) AS count FROM "Pdf" ${whereClause};`,
+      ...params
+    );
+    const total = Number(countResult[0]?.count ?? 0);
+
+    // 5. Paginated fetch (SQLite wants LIMIT then OFFSET)
+    const pdfs = await db.$queryRawUnsafe<
+      Array<{
+        id: string;
+        title: string;
+        filename: string;
+        category: string;
+        type: string;
+        origin: string;
+        createdAt: string; // or Date, depending on your driver
+      }>
+    >(
+      `
+      SELECT
+        "id", "title", "filename", "category", "type", "origin", "createdAt"
+      FROM "Pdf"
+      ${whereClause}
+      ORDER BY "createdAt" DESC
+      LIMIT $${params.length + 1}
+      OFFSET $${params.length + 2};
+      `,
+      ...params,
+      limit,
+      skip
+    );
 
     return NextResponse.json({
-      pdfs: pdfs.map((pdf) => ({
-        id: pdf.id,
-        title: pdf.title,
-        filename: pdf.filename,
-        category: pdf.category,
-        type: pdf.type,
-        origin: pdf.origin,
-        createdAt: pdf.createdAt,
+      pdfs: pdfs.map((p) => ({
+        ...p,
+        createdAt: new Date(p.createdAt),
       })),
       pagination: {
         page,

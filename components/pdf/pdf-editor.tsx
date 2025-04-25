@@ -129,11 +129,11 @@ export function PdfEditor({ pdf }: PdfEditorProps) {
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={PdfType.General}>General</SelectItem>
-                <SelectItem value={PdfType.Confidential}>
-                  Confidential
-                </SelectItem>
-                <SelectItem value={PdfType.Restricted}>Restricted</SelectItem>
+                {Object.values(PdfType).map((pdfType) => (
+                  <SelectItem key={pdfType} value={pdfType}>
+                    {pdfType}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -148,9 +148,11 @@ export function PdfEditor({ pdf }: PdfEditorProps) {
                 <SelectValue placeholder="Select origin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={PdfOrigin.Internal}>Internal</SelectItem>
-                <SelectItem value={PdfOrigin.External}>External</SelectItem>
-                <SelectItem value={PdfOrigin.Classified}>Classified</SelectItem>
+                {Object.values(PdfOrigin).map((pdfOrigin) => (
+                  <SelectItem key={pdfOrigin} value={pdfOrigin}>
+                    {pdfOrigin}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

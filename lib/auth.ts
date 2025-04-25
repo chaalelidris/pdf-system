@@ -1,49 +1,45 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
 import { hash } from "bcryptjs";
-import type { Session } from "next-auth";
 
-// Get the session on the server
-export async function getSession(): Promise<Session | null> {
-  return await getServerSession(authOptions);
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
 }
 
-// Check if the user is authenticated
-export async function getCurrentUser() {
-  const session = await getSession();
+export async function requireAuth(): Promise<User> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  return session.user as User;
+}
+
+export async function requireAdmin(): Promise<User> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  return session.user as User;
+}
+
+export async function getSession(): Promise<{ user: User } | null> {
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     return null;
   }
 
-  return session.user;
+  return { user: session.user as User };
 }
 
-// Require authentication
-export async function requireAuth() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  return user;
-}
-
-// Require admin role
-export async function requireAdmin() {
-  const user = await requireAuth();
-
-  // TypeScript now knows that user.role exists
-  if (user.role !== "admin") {
-    redirect("/");
-  }
-
-  return user;
-}
-
-// Hash password
 export async function hashPassword(password: string): Promise<string> {
-  return hash(password, 10);
+  const hashedPassword = await hash(password, 10);
+  return hashedPassword;
 }

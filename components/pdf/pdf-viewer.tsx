@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 
-// Set up the worker for PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up the worker for PDF.js - use local worker file
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 interface PdfViewerProps {
   fileUrl: string;
@@ -29,12 +29,17 @@ export function PdfViewer({ fileUrl, filename }: PdfViewerProps) {
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
+    toast({
+      title: "PDF loaded successfully",
+      description: `Document has ${numPages} pages`,
+    });
   }
 
   function onDocumentLoadError(error: Error) {
+    console.error("PDF load error:", error);
     toast({
       title: "Error loading PDF",
-      description: error.message,
+      description: "Could not load the PDF document. Please try again later.",
       variant: "destructive",
     });
   }
@@ -104,6 +109,11 @@ export function PdfViewer({ fileUrl, filename }: PdfViewerProps) {
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={<div className="text-center py-10">Loading PDF...</div>}
+            error={
+              <div className="text-center py-10 text-red-500">
+                Failed to load PDF. Please try again.
+              </div>
+            }
           >
             <Page
               pageNumber={pageNumber}

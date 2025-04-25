@@ -1,46 +1,92 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { User } from "@/lib/types"
-import { CreateUserForm } from "@/components/admin/create-user-form"
-import { UploadPdfForm } from "@/components/admin/upload-pdf-form"
-import { AdminPdfList } from "@/components/admin/admin-pdf-list"
+import { useEffect, useState } from "react";
+import { FileText, Users, Clock, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
-interface AdminDashboardProps {
-  user: User
+interface DashboardStats {
+  totalPdfs: number;
+  totalUsers: number;
+  recentUploads: number;
 }
 
-export function AdminDashboard({ user }: AdminDashboardProps) {
-  const [refreshPdfList, setRefreshPdfList] = useState(0)
+export function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalPdfs: 0,
+    totalUsers: 0,
+    recentUploads: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const handlePdfUploaded = () => {
-    setRefreshPdfList((prev) => prev + 1)
-  }
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/stats");
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard statistics");
+        }
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard statistics",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [toast]);
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-
-      <Tabs defaultValue="pdfs" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="pdfs">PDFs</TabsTrigger>
-          <TabsTrigger value="upload">Upload PDF</TabsTrigger>
-          <TabsTrigger value="users">Create User</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="pdfs" className="mt-6">
-          <AdminPdfList refreshTrigger={refreshPdfList} />
-        </TabsContent>
-
-        <TabsContent value="upload" className="mt-6">
-          <UploadPdfForm onSuccess={handlePdfUploaded} />
-        </TabsContent>
-
-        <TabsContent value="users" className="mt-6">
-          <CreateUserForm />
-        </TabsContent>
-      </Tabs>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
+          <FileText className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {isLoading ? "..." : stats.totalPdfs}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            PDF documents in the system
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {isLoading ? "..." : stats.totalUsers}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Registered system users
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Recent Uploads</CardTitle>
+          <Clock className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {isLoading ? "..." : stats.recentUploads}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Documents uploaded in the last 7 days
+          </p>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

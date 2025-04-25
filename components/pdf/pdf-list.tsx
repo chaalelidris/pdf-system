@@ -1,10 +1,10 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
+import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Download, Eye, Edit, Trash2, Search, Filter } from "lucide-react";
+import { Download, Eye, Edit, Trash2, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,23 +39,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
 import {
   Category,
   PdfType,
@@ -64,6 +48,7 @@ import {
   type PaginationParams,
 } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { PdfUploadDialog } from "@/components/pdf/pdf-upload-dialog";
 
 interface PdfListProps {
   isAdmin?: boolean;
@@ -84,6 +69,24 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
+
+      searchTimeout.current = setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("page", "1"); // Reset to first page when searching
+        params.set("search", value);
+        router.push(`?${params.toString()}`);
+      }, 300); // 300ms debounce
+    },
+    [searchParams, router]
+  );
 
   useEffect(() => {
     // Get filters from URL if present
@@ -142,24 +145,43 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
     }
   };
 
-  const applyFilters = () => {
-    // Update URL with filters
-    const params = new URLSearchParams();
-    params.set("page", "1"); // Reset to first page when filtering
-    if (searchQuery) params.set("search", searchQuery);
-    if (categoryFilter) params.set("category", categoryFilter);
-    if (typeFilter) params.set("type", typeFilter);
-    if (originFilter) params.set("origin", originFilter);
-
-    router.push(`?${params.toString()}`);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    debouncedSearch(value);
   };
 
-  const resetFilters = () => {
-    setSearchQuery("");
-    setCategoryFilter("");
-    setTypeFilter("");
-    setOriginFilter("");
-    router.push("?page=1");
+  const handleFilterChange = (
+    type: "category" | "type" | "origin",
+    value: string
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1"); // Reset to first page when filtering
+
+    if (type === "category") {
+      setCategoryFilter(value);
+      if (value === "all") {
+        params.delete("category");
+      } else {
+        params.set("category", value);
+      }
+    } else if (type === "type") {
+      setTypeFilter(value);
+      if (value === "all") {
+        params.delete("type");
+      } else {
+        params.set("type", value);
+      }
+    } else if (type === "origin") {
+      setOriginFilter(value);
+      if (value === "all") {
+        params.delete("origin");
+      } else {
+        params.set("origin", value);
+      }
+    }
+
+    router.push(`?${params.toString()}`);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -214,10 +236,30 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case PdfType.Confidential:
+      case PdfType.ORDER:
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case PdfType.OFFICIAL_DECREE:
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case PdfType.OFFICIAL_GAZETTE:
         return "bg-red-100 text-red-800 border-red-200";
-      case PdfType.Restricted:
+      case PdfType.MEMORANDUM:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case PdfType.DECISION:
         return "bg-amber-100 text-amber-800 border-amber-200";
+      case PdfType.PUBLICATION:
+        return "bg-cyan-100 text-cyan-800 border-cyan-200";
+      case PdfType.REGULATION:
+        return "bg-teal-100 text-teal-800 border-teal-200";
+      case PdfType.DIRECTIVE:
+        return "bg-lime-100 text-lime-800 border-lime-200";
+      case PdfType.INSTRUCTION:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case PdfType.BYLAW:
+        return "bg-violet-100 text-violet-800 border-violet-200";
+      case PdfType.DISPATCH:
+        return "bg-pink-100 text-pink-800 border-pink-200";
+      case PdfType.OTHERS:
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-green-100 text-green-800 border-green-200";
     }
@@ -225,9 +267,9 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
 
   const getOriginColor = (origin: string) => {
     switch (origin) {
-      case PdfOrigin.External:
+      case PdfOrigin.REGIONAL:
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case PdfOrigin.Classified:
+      case PdfOrigin.BRIGADE_COMMANDER:
         return "bg-purple-100 text-purple-800 border-purple-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
@@ -237,114 +279,74 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>PDF Documents</span>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filter Documents</SheetTitle>
-                <SheetDescription>
-                  Apply filters to narrow down the document list
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="search">Search</Label>
-                  <Input
-                    id="search"
-                    placeholder="Search by title..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={categoryFilter}
-                    onValueChange={setCategoryFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value={Category.FinancialSeries}>
-                        {Category.FinancialSeries}
-                      </SelectItem>
-                      <SelectItem value={Category.GeneralAdministration}>
-                        {Category.GeneralAdministration}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value={PdfType.General}>General</SelectItem>
-                      <SelectItem value={PdfType.Confidential}>
-                        Confidential
-                      </SelectItem>
-                      <SelectItem value={PdfType.Restricted}>
-                        Restricted
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="origin">Origin</Label>
-                  <Select value={originFilter} onValueChange={setOriginFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Origins" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Origins</SelectItem>
-                      <SelectItem value={PdfOrigin.Internal}>
-                        Internal
-                      </SelectItem>
-                      <SelectItem value={PdfOrigin.External}>
-                        External
-                      </SelectItem>
-                      <SelectItem value={PdfOrigin.Classified}>
-                        Classified
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <SheetFooter>
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset
-                </Button>
-                <SheetClose asChild>
-                  <Button onClick={applyFilters}>Apply Filters</Button>
-                </SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>PDF Documents</CardTitle>
+          {isAdmin && (
+            <PdfUploadDialog onSuccess={() => fetchPdfs(pagination.page)} />
+          )}
+        </div>
         <CardDescription>Browse and manage PDF documents</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative mb-4">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Quick search by title..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-          />
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => handleFilterChange("category", value)}
+          >
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value={Category.FinancialSeries}>
+                {Category.FinancialSeries}
+              </SelectItem>
+              <SelectItem value={Category.GeneralAdministration}>
+                {Category.GeneralAdministration}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={typeFilter}
+            onValueChange={(value) => handleFilterChange("type", value)}
+          >
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {Object.values(PdfType).map((pdfType) => (
+                <SelectItem key={pdfType} value={pdfType}>
+                  {pdfType}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={originFilter}
+            onValueChange={(value) => handleFilterChange("origin", value)}
+          >
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="All Origins" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Origins</SelectItem>
+              {Object.values(PdfOrigin).map((pdfOrigin) => (
+                <SelectItem key={pdfOrigin} value={pdfOrigin}>
+                  {pdfOrigin}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {isLoading ? (
@@ -398,42 +400,52 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
                         {formatDate(pdf.createdAt)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleView(pdf)}>
-                              <Eye className="h-4 w-4 mr-2" />
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(pdf)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only md:not-sr-only md:ml-2">
                               View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDownload(pdf)}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
+                            </span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(pdf)}
+                          >
+                            <Download className="h-4 w-4" />
+                            <span className="sr-only md:not-sr-only md:ml-2">
                               Download
-                            </DropdownMenuItem>
-                            {isAdmin && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => handleEdit(pdf)}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
+                            </span>
+                          </Button>
+                          {isAdmin && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(pdf)}
+                              >
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only md:not-sr-only md:ml-2">
                                   Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(pdf.id)}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
+                                </span>
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDelete(pdf.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only md:not-sr-only md:ml-2">
                                   Delete
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                </span>
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

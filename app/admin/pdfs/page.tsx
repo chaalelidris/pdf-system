@@ -1,8 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
-import { UploadPdfForm } from "@/components/admin/upload-pdf-form";
+import { PdfList } from "@/components/pdf/pdf-list";
 import { AppLayout } from "@/components/layout/app-layout";
 
-export default async function UploadPdfPage() {
+export default async function AdminPdfsPage() {
   const user = await requireAdmin();
   const adminUser = {
     id: user.id,
@@ -14,8 +14,8 @@ export default async function UploadPdfPage() {
   return (
     <AppLayout user={adminUser}>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Upload PDF Document</h1>
-        <UploadPdfForm />
+        <h1 className="text-2xl font-bold"> Manage PDF Documents</h1>
+        <PdfList isAdmin={true} />
       </div>
     </AppLayout>
   );
