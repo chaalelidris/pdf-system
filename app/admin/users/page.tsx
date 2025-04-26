@@ -16,7 +16,7 @@ export default async function UsersPage() {
   return (
     <AppLayout user={userData}>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl font-bold">Manage Users</h1>
         <UserManagement />
       </div>
     </AppLayout>

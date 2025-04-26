@@ -24,7 +24,8 @@ export async function PATCH(
   }
 
   try {
-    const id = await params.id;
+    const param = await params;
+    const id = param.id;
     const body = await request.json();
 
     // Validate request body
@@ -104,7 +105,8 @@ export async function DELETE(
   }
 
   try {
-    const id = await params.id;
+    const param = await params;
+    const id = param.id;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
