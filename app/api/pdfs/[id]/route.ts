@@ -27,7 +27,7 @@ export async function GET(
   }
 
   try {
-    const id = params.id;
+    const id = await params.id;
 
     // Find PDF in database
     const pdf = await db.pdf.findUnique({
@@ -98,7 +98,7 @@ export async function PATCH(
   }
 
   try {
-    const id = params.id;
+    const id = await params.id;
     const body = await request.json();
 
     // Validate request body
@@ -162,7 +162,7 @@ export async function DELETE(
   }
 
   try {
-    const id = params.id;
+    const id = await params.id;
 
     // Find PDF in database
     const pdf = await db.pdf.findUnique({
