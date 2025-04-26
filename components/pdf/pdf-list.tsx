@@ -363,6 +363,9 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead className="hidden md:table-cell">
+                      File Number
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">
                       Category
                     </TableHead>
                     <TableHead className="hidden md:table-cell">Type</TableHead>
@@ -377,6 +380,9 @@ export function PdfList({ isAdmin = false }: PdfListProps) {
                   {pdfs.map((pdf) => (
                     <TableRow key={pdf.id}>
                       <TableCell className="font-medium">{pdf.title}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {pdf.fileNumber}
+                      </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {pdf.category}
                       </TableCell>

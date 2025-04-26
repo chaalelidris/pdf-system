@@ -23,8 +23,9 @@ export async function POST(request: NextRequest) {
     const category = formData.get("category") as Category;
     const type = formData.get("type") as PdfType;
     const origin = formData.get("origin") as PdfOrigin;
+    const fileNumber = formData.get("fileNumber") as string;
 
-    if (!file || !title || !category) {
+    if (!file || !title || !category || !fileNumber) {
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 }
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
         category,
         type,
         origin,
+        fileNumber,
       },
     });
 
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
       pdf: {
         id: pdf.id,
         title: pdf.title,
+        fileNumber: pdf.fileNumber,
         filename: pdf.filename,
         category: pdf.category,
         type: pdf.type,

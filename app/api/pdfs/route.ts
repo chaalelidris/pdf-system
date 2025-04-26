@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
         id: string;
         title: string;
         filename: string;
+        fileNumber: string;
         category: string;
         type: string;
         origin: string;
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     >(
       `
       SELECT
-        "id", "title", "filename", "category", "type", "origin", "createdAt"
+        "id", "title", "filename", "fileNumber", "category", "type", "origin", "createdAt"
       FROM "Pdf"
       ${whereClause}
       ORDER BY "createdAt" DESC

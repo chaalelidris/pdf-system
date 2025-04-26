@@ -59,6 +59,7 @@ export interface PdfDocument {
   id: string;
   title: string;
   filename: string;
+  fileNumber: string;
   category: Category;
   type: PdfType;
   origin: PdfOrigin;

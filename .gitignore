@@ -28,3 +28,5 @@ next-env.d.ts
 
 # files
 /storage
+
+/prisma/*.db

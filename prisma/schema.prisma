@@ -20,14 +20,15 @@ model User {
 }
 
 model Pdf {
-  id        String   @id @default(uuid())
-  title     String
-  filename  String   @unique
-  category  String
-  type      String   @default("general") // New field for PDF type
-  origin    String   @default("internal") // New field for PDF origin
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  title      String
+  filename   String   @unique
+  fileNumber String?
+  category   String
+  type       String   @default("امر")
+  origin     String   @default("مركزي")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // NextAuth.js Models

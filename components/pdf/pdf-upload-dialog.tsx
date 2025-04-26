@@ -33,6 +33,7 @@ interface PdfUploadDialogProps {
 export function PdfUploadDialog({ onSuccess }: PdfUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [fileNumber, setFileNumber] = useState("");
   const [category, setCategory] = useState<Category | "">("");
   const [type, setType] = useState<PdfType | "">("");
   const [origin, setOrigin] = useState<PdfOrigin>(PdfOrigin.CENTRAL);
@@ -79,7 +80,7 @@ export function PdfUploadDialog({ onSuccess }: PdfUploadDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!file || !title || !category || !type) {
+    if (!file || !title || !category || !type || !origin || !fileNumber) {
       toast({
         title: "Missing fields",
         description: "Please fill all required fields",
@@ -97,6 +98,7 @@ export function PdfUploadDialog({ onSuccess }: PdfUploadDialogProps) {
       formData.append("category", category);
       formData.append("type", type);
       formData.append("origin", origin);
+      formData.append("fileNumber", fileNumber);
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -163,6 +165,15 @@ export function PdfUploadDialog({ onSuccess }: PdfUploadDialogProps) {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="fileNumber">File Number</Label>
+              <Input
+                id="fileNumber"
+                value={fileNumber}
+                onChange={(e) => setFileNumber(e.target.value)}
                 required
               />
             </div>
